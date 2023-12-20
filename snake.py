@@ -22,15 +22,32 @@ class Coordinate:
 
 
 class Snake:
-    def __init__(self, Coordinates, length, scolor):
+    def __init__(self, Coordinates, length):
         self.Coordinates = Coordinates
+        self.width = 20
+        self.height = 20
         self.length = length
-        self.scolor = scolor
+
+    def draw(self):
+        pygame.draw.rect(win, (0, 0, 255), (self.Coordinates.x, self.Coordinates.y, self.width, self.height))
+
+    def draw_segments(self, segments):
+        for i, segment in enumerate(segments[-self.length:]):
+            x_offset = i * self.width
+            y_offset = i * self.height
+            segment.Coordinates.x = self.Coordinates.x - x_offset
+            segment.Coordinates.y = self.Coordinates.y - y_offset
+            segment.drawSegment()
+
+
+class Segment:
+    def __init__(self, Coordinates):
+        self.Coordinates = Coordinates
         self.width = 20
         self.height = 20
 
-    def draw(self):
-        pygame.draw.rect(win, self.scolor, (self.Coordinates.x, self.Coordinates.y, self.width, self.height))
+    def drawSegment(self):
+        pygame.draw.rect(win, (0, 0, 255), (self.Coordinates.x, self.Coordinates.y, self.width, self.height))
 
 
 class Apple:
@@ -65,7 +82,7 @@ def respawn_apple():
     apple.drawApple()
 
 
-def gameloop(playerSnake):
+def gameloop(playerSnake, segments):
     game_started = False
     # game_over = False
     game_close = False
@@ -98,24 +115,40 @@ def gameloop(playerSnake):
                     if event.key == pygame.K_w and ymove == 0 or event.key == pygame.K_UP and ymove == 0:
                         ymove = -distance
                         xmove = 0
+                        playerSnake.facing = "up"
                     elif event.key == pygame.K_s and ymove == 0 or event.key == pygame.K_DOWN and ymove == 0:
                         ymove = distance
                         xmove = 0
+                        playerSnake.facing = "do"
                     elif event.key == pygame.K_a and xmove == 0 or event.key == pygame.K_LEFT and xmove == 0:
                         xmove = -distance
                         ymove = 0
+                        playerSnake.facing = "le"
                     elif event.key == pygame.K_d and xmove == 0 or event.key == pygame.K_RIGHT and xmove == 0:
                         xmove = distance
                         ymove = 0
+                        playerSnake.facing = "ri"
                 # Movement
 
         if not game_close:
             if game_started:
+                previoussnakelocation = playerSnake.Coordinates
+
                 playerSnake.Coordinates.y += ymove
                 playerSnake.Coordinates.x += xmove
 
                 win.fill((255, 255, 255))
                 pygame.draw.rect(win, (0, 0, 0), (0, 0, 780, 580))
+
+                if playerSnake.length > 0:
+                    for i in range(playerSnake.length - 1, 0, -1):
+                        segments[i].Coordinates.x = segments[i - 1].Coordinates.x
+                        segments[i].Coordinates.y = segments[i - 1].Coordinates.y
+                        segments[0].Coordinates.x = previoussnakelocation.x
+                        segments[0].Coordinates.y = previoussnakelocation.y
+
+                playerSnake.draw_segments(segments)
+
                 apple.drawApple()
                 playerSnake.draw()
 
@@ -124,6 +157,8 @@ def gameloop(playerSnake):
                     apple_exists = True
 
                 if apple.Coordinates.x == playerSnake.Coordinates.x and apple.Coordinates.y == playerSnake.Coordinates.y:
+                    segments.append(Segment(Coordinate(playerSnake.Coordinates.x, playerSnake.Coordinates.y)))
+                    playerSnake.length += 1
                     apple_exists = False
 
                 pygame.display.update()
@@ -144,6 +179,6 @@ def gameloop(playerSnake):
 
 starty = random.randint(2, 27) * 20
 startx = random.randint(2, 37) * 20
-color = (0, 0, 255)
-Player = Snake(random_coordinate(), 1, color)
-gameloop(Player)
+Player = Snake(random_coordinate(), 0)
+Segments = []
+gameloop(Player, Segments)
