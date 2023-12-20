@@ -1,11 +1,9 @@
-# make nice start screen
-# apple spawn
-# apple eat and respawn
 # growth when apple eaten
 # game over when hit wall
 # game over when hit self
 # make x appear top left when game over to quit game
 # be done
+# make apples round some day
 
 import random
 import sys
@@ -38,10 +36,11 @@ class Snake:
 class Apple:
     def __init__(self, Coordinates):
         self.Coordinates = Coordinates
-        self.radius = 20
+        self.width = 20
+        self.height = 20
 
     def drawApple(self):
-        pygame.draw.circle(win, (255, 0, 0), (self.Coordinates.x, self.Coordinates.y), self.radius)
+        pygame.draw.rect(win, (255, 0, 0), (self.Coordinates.x, self.Coordinates.y, self.width, self.height))
 
 
 def display_start_message():
@@ -58,10 +57,20 @@ def random_coordinate():
     return Coordinate(x, y)
 
 
-def gameloop(playerSnake, apple):
+apple = Apple(random_coordinate())
+
+
+def respawn_apple():
+    apple.Coordinates = random_coordinate()
+    apple.drawApple()
+
+
+def gameloop(playerSnake):
     game_started = False
     # game_over = False
     game_close = False
+    apple_exists = False
+
     distance = 20
     xmove = 0
     ymove = 0
@@ -107,7 +116,15 @@ def gameloop(playerSnake, apple):
 
                 win.fill((255, 255, 255))
                 pygame.draw.rect(win, (0, 0, 0), (0, 0, 780, 580))
+                apple.drawApple()
                 playerSnake.draw()
+
+                if not apple_exists:
+                    respawn_apple()
+                    apple_exists = True
+
+                if apple.Coordinates.x == playerSnake.Coordinates.x and apple.Coordinates.y == playerSnake.Coordinates.y:
+                    apple_exists = False
 
                 pygame.display.update()
                 clock.tick(15)
@@ -129,5 +146,4 @@ starty = random.randint(2, 27) * 20
 startx = random.randint(2, 37) * 20
 color = (0, 0, 255)
 Player = Snake(random_coordinate(), 1, color)
-Apple = Apple(random_coordinate())
-gameloop(Player, Apple)
+gameloop(Player)
