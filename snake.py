@@ -35,8 +35,31 @@ class Snake:
         pygame.draw.rect(win, self.scolor, (self.Coordinates.x, self.Coordinates.y, self.width, self.height))
 
 
-def gameloop(playerSnake):
-    # game_started = False
+class Apple:
+    def __init__(self, Coordinates):
+        self.Coordinates = Coordinates
+        self.radius = 20
+
+    def drawApple(self):
+        pygame.draw.circle(win, (255, 0, 0), (self.Coordinates.x, self.Coordinates.y), self.radius)
+
+
+def display_start_message():
+    font = pygame.font.Font(None, 36)
+    text = font.render("Press any key to start!", True, (255, 255, 255))
+    text_rect = text.get_rect(center=(width // 2, height // 2))
+    win.blit(text, text_rect)
+    pygame.display.update()
+
+
+def random_coordinate():
+    y = random.randint(2, 27) * 20
+    x = random.randint(2, 37) * 20
+    return Coordinate(x, y)
+
+
+def gameloop(playerSnake, apple):
+    game_started = False
     # game_over = False
     game_close = False
     distance = 20
@@ -44,45 +67,67 @@ def gameloop(playerSnake):
     ymove = 0
 
     clock = pygame.time.Clock()
+    display_start_message()
+    pygame.display.update()
 
     while not game_close:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_q:
-                    game_close = True
 
-        # Movement
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_w and ymove == 0:
-                    ymove = -distance
-                    xmove = 0
-                elif event.key == pygame.K_s and ymove == 0:
-                    ymove = distance
-                    xmove = 0
-                elif event.key == pygame.K_a and xmove == 0:
-                    xmove = -distance
-                    ymove = 0
-                elif event.key == pygame.K_d and xmove == 0:
-                    xmove = distance
-                    ymove = 0
-        playerSnake.Coordinates.y += ymove
-        playerSnake.Coordinates.x += xmove
-        # Movement
+            if not game_started:
+                if event.type == pygame.KEYDOWN:
+                    game_started = True
+            else:
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_q:
+                        game_close = True
 
-        win.fill((255, 255, 255))
-        pygame.draw.rect(win, (0, 0, 0), (0, 0, 780, 580))
-        playerSnake.draw()
-        pygame.display.update()
-        clock.tick(15)
+                # Movement
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_w and ymove == 0 or event.key == pygame.K_UP and ymove == 0:
+                        ymove = -distance
+                        xmove = 0
+                    elif event.key == pygame.K_s and ymove == 0 or event.key == pygame.K_DOWN and ymove == 0:
+                        ymove = distance
+                        xmove = 0
+                    elif event.key == pygame.K_a and xmove == 0 or event.key == pygame.K_LEFT and xmove == 0:
+                        xmove = -distance
+                        ymove = 0
+                    elif event.key == pygame.K_d and xmove == 0 or event.key == pygame.K_RIGHT and xmove == 0:
+                        xmove = distance
+                        ymove = 0
+                # Movement
+
+        if not game_close:
+            if game_started:
+                playerSnake.Coordinates.y += ymove
+                playerSnake.Coordinates.x += xmove
+
+                win.fill((255, 255, 255))
+                pygame.draw.rect(win, (0, 0, 0), (0, 0, 780, 580))
+                playerSnake.draw()
+
+                pygame.display.update()
+                clock.tick(15)
+            else:
+                win.fill((0, 0, 0))
+                display_start_message()
+                pygame.display.update()
+
+        # Apple
+
+        # Apple
+
+        # Game Over
+
+        # Game Over
 
 
 starty = random.randint(2, 27) * 20
 startx = random.randint(2, 37) * 20
-StartingPosition = Coordinate(startx, starty)
-print(startx, starty)
 color = (0, 0, 255)
-Player = Snake(StartingPosition, 1, color)
-gameloop(Player)
+Player = Snake(random_coordinate(), 1, color)
+Apple = Apple(random_coordinate())
+gameloop(Player, Apple)
