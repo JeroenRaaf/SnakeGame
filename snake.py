@@ -1,10 +1,3 @@
-# growth when apple eaten
-# game over when hit wall
-# game over when hit self
-# make x appear top left when game over to quit game
-# be done
-# make apples round some day
-
 import random
 import sys
 import pygame
@@ -54,9 +47,6 @@ class Segment:
         self.Coordinates = Coordinates
         self.width = 20
         self.height = 20
-
-    def drawSegment(self):
-        pygame.draw.rect(win, (0, 0, 255), (self.Coordinates.x, self.Coordinates.y, self.width, self.height))
 
 
 class Apple:
@@ -225,13 +215,6 @@ def gameloop(playerSnake):
                 win.fill((0, 0, 0))
                 display_gameover_message()
                 pygame.display.update()
-        # Apple
-
-        # Apple
-
-        # Game Over
-
-        # Game Over
 
 
 starty = random.randint(2, 27) * 20
