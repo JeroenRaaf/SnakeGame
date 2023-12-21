@@ -45,6 +45,9 @@ class Snake:
                     self.segments.append(Coordinate(self.segments[i - 1].x, self.segments[i - 1].y))
         self.segments[0] = Coordinate(self.Coordinates.x, self.Coordinates.y)
 
+    def delete_segments(self):
+        self.segments = [Coordinate(self.Coordinates.x, self.Coordinates.y)]
+
 
 class Segment:
     def __init__(self, Coordinates):
@@ -71,12 +74,33 @@ def respawn_apple():
     apple.drawApple()
 
 
-def display_start_message():
-    font = pygame.font.Font(None, 36)
-    text = font.render("Press any key to start!", True, (255, 255, 255))
-    text_rect = text.get_rect(center=(width // 2, height // 2))
-    win.blit(text, text_rect)
+font = pygame.font.Font(None, 38)
+sub_font = pygame.font.Font(None, 25)
+
+
+def display_text_message(main_text, color, sub_text=None):
+    main_text_surface = font.render(main_text, True, color)
+    main_text_rect = main_text_surface.get_rect(center=(width // 2, height // 2))
+    win.blit(main_text_surface, main_text_rect)
+
+    if sub_text:
+        sub_text_surface = sub_font.render(sub_text, True, color)
+        sub_text_rect = sub_text_surface.get_rect(center=(width // 2, height // 2 + 20))
+        win.blit(sub_text_surface, sub_text_rect)
+
     pygame.display.update()
+
+
+def display_start_message():
+    display_text_message("Press any key to start!", (255, 255, 255), "or press 'Q' to exit.")
+
+
+def display_gameover_message():
+    display_text_message("Game over! Press any key to continue.", (255, 0, 0), "or press 'Q' to exit.")
+
+
+def display_quit_message():
+    display_text_message("Are you sure? Press any key to continue.", (255, 0, 255), "or press 'Q' again to exit.")
 
 
 def random_coordinate():
@@ -88,19 +112,20 @@ def random_coordinate():
 apple = Apple(random_coordinate())
 
 
-def gameloop(playerSnake, segments):
+def gameloop(playerSnake):
     game_started = False
-    # game_over = False
+    game_over = False
     game_close = False
+    game_paused = False
     apple_exists = False
 
     distance = 20
     xmove = 0
     ymove = 0
+    pausedxmove = 0
+    pausedymove = 0
 
     clock = pygame.time.Clock()
-    display_start_message()
-    pygame.display.update()
 
     while not game_close:
         for event in pygame.event.get():
@@ -110,60 +135,95 @@ def gameloop(playerSnake, segments):
 
             if not game_started:
                 if event.type == pygame.KEYDOWN:
-                    game_started = True
+                    if event.key == pygame.K_q:
+                        game_close = True
+                    elif event.type == pygame.KEYDOWN:
+                        game_over = False
+                        game_started = True
+                        playerSnake.Coordinates = random_coordinate()
             else:
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_q:
-                        game_close = True
+                        if game_paused:
+                            game_close = True
+
+                        game_paused = True
+                    else:
+                        xmove = pausedxmove
+                        ymove = pausedymove
+                        game_paused = False
+
                 # Movement
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_w and ymove == 0 or event.key == pygame.K_UP and ymove == 0:
                         ymove = -distance
                         xmove = 0
-                        playerSnake.facing = "up"
                     elif event.key == pygame.K_s and ymove == 0 or event.key == pygame.K_DOWN and ymove == 0:
                         ymove = distance
                         xmove = 0
-                        playerSnake.facing = "do"
                     elif event.key == pygame.K_a and xmove == 0 or event.key == pygame.K_LEFT and xmove == 0:
                         xmove = -distance
                         ymove = 0
-                        playerSnake.facing = "le"
                     elif event.key == pygame.K_d and xmove == 0 or event.key == pygame.K_RIGHT and xmove == 0:
                         xmove = distance
                         ymove = 0
-                        playerSnake.facing = "ri"
                 # Movement
 
         if not game_close:
-            if game_started:
-                playerSnake.Coordinates.y += ymove
-                playerSnake.Coordinates.x += xmove
+            if not game_over:
+                if game_paused:
+                    pausedxmove = xmove
+                    pausedymove = ymove
+                    xmove = 0
+                    ymove = 0
+                    win.fill((0, 0, 0))
+                    display_quit_message()
+                    pygame.display.update()
+                elif game_started:
+                    playerSnake.Coordinates.y += ymove
+                    playerSnake.Coordinates.x += xmove
 
-                win.fill((255, 255, 255))
-                pygame.draw.rect(win, (0, 0, 0), (0, 0, 780, 580))
+                    win.fill((255, 255, 255))
+                    pygame.draw.rect(win, (0, 0, 0), (0, 0, 780, 580))
+                    apple.drawApple()
+                    playerSnake.draw()
+                    if not apple_exists:
+                        respawn_apple()
+                        apple_exists = True
 
-                apple.drawApple()
-                playerSnake.draw()
+                    if apple.Coordinates.x == playerSnake.Coordinates.x and apple.Coordinates.y == playerSnake.Coordinates.y:
+                        playerSnake.length += 1
+                        apple_exists = False
+                    # Collision Check
+                    if playerSnake.Coordinates.x >= 780 or playerSnake.Coordinates.x <= 0:
+                        game_over = True
+                    elif playerSnake.Coordinates.y >= 580 or playerSnake.Coordinates.y <= 0:
+                        game_over = True
 
-                if not apple_exists:
-                    respawn_apple()
-                    apple_exists = True
+                    for segment in playerSnake.segments:
+                        if segment is not playerSnake.segments[0]:
+                            if playerSnake.Coordinates.x == segment.x and playerSnake.Coordinates.y == segment.y:
+                                game_over = True
+                    # Collision Check
 
-                if apple.Coordinates.x == playerSnake.Coordinates.x and apple.Coordinates.y == playerSnake.Coordinates.y:
-                    segments.append(Segment(Coordinate(-1, -1)))
-                    playerSnake.length += 1
-                    apple_exists = False
+                    playerSnake.update_segments()
+                    playerSnake.draw_segments()
 
-                # Update snake segments after checking for collisions
-                playerSnake.update_segments()
-                playerSnake.draw_segments()
-
-                pygame.display.update()
-                clock.tick(15)
+                    pygame.display.update()
+                    clock.tick(15)
+                else:
+                    win.fill((0, 0, 0))
+                    display_start_message()
+                    pygame.display.update()
             else:
+                if playerSnake.length > 1:
+                    playerSnake.delete_segments()
+                    playerSnake.length = 1
+                game_started = False
+                xmove = 0
+                ymove = 0
                 win.fill((0, 0, 0))
-                display_start_message()
+                display_gameover_message()
                 pygame.display.update()
         # Apple
 
@@ -176,6 +236,5 @@ def gameloop(playerSnake, segments):
 
 starty = random.randint(2, 27) * 20
 startx = random.randint(2, 37) * 20
-Player = Snake(random_coordinate())
-Segments = []
-gameloop(Player, Segments)
+Player = Snake(Coordinate(0, 0))
+gameloop(Player)
