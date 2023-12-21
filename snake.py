@@ -138,7 +138,7 @@ def gameloop(playerSnake):
                             game_close = True
 
                         game_paused = True
-                    else:
+                    elif game_paused and event.type == pygame.KEYDOWN:
                         xmove = pausedxmove
                         ymove = pausedymove
                         game_paused = False
