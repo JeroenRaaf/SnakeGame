@@ -22,22 +22,28 @@ class Coordinate:
 
 
 class Snake:
-    def __init__(self, Coordinates, length):
+    def __init__(self, Coordinates):
         self.Coordinates = Coordinates
         self.width = 20
         self.height = 20
-        self.length = length
+        self.length = 1
+        self.segments = [Coordinate(Coordinates.x, Coordinates.y)]
 
     def draw(self):
         pygame.draw.rect(win, (0, 0, 255), (self.Coordinates.x, self.Coordinates.y, self.width, self.height))
 
-    def draw_segments(self, segments):
-        for i, segment in enumerate(segments[-self.length:]):
-            x_offset = i * self.width
-            y_offset = i * self.height
-            segment.Coordinates.x = self.Coordinates.x - x_offset
-            segment.Coordinates.y = self.Coordinates.y - y_offset
-            segment.drawSegment()
+    def draw_segments(self):
+        for segment in self.segments:
+            pygame.draw.rect(win, (0, 0, 255), (segment.x, segment.y, self.width, self.height))
+
+    def update_segments(self):
+        if self.length > 1:
+            for i in range(self.length - 1, 0, -1):
+                if i < len(self.segments):
+                    self.segments[i] = Coordinate(self.segments[i - 1].x, self.segments[i - 1].y)
+                else:
+                    self.segments.append(Coordinate(self.segments[i - 1].x, self.segments[i - 1].y))
+        self.segments[0] = Coordinate(self.Coordinates.x, self.Coordinates.y)
 
 
 class Segment:
@@ -60,6 +66,11 @@ class Apple:
         pygame.draw.rect(win, (255, 0, 0), (self.Coordinates.x, self.Coordinates.y, self.width, self.height))
 
 
+def respawn_apple():
+    apple.Coordinates = random_coordinate()
+    apple.drawApple()
+
+
 def display_start_message():
     font = pygame.font.Font(None, 36)
     text = font.render("Press any key to start!", True, (255, 255, 255))
@@ -75,11 +86,6 @@ def random_coordinate():
 
 
 apple = Apple(random_coordinate())
-
-
-def respawn_apple():
-    apple.Coordinates = random_coordinate()
-    apple.drawApple()
 
 
 def gameloop(playerSnake, segments):
@@ -109,7 +115,6 @@ def gameloop(playerSnake, segments):
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_q:
                         game_close = True
-
                 # Movement
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_w and ymove == 0 or event.key == pygame.K_UP and ymove == 0:
@@ -132,22 +137,11 @@ def gameloop(playerSnake, segments):
 
         if not game_close:
             if game_started:
-                previoussnakelocation = playerSnake.Coordinates
-
                 playerSnake.Coordinates.y += ymove
                 playerSnake.Coordinates.x += xmove
 
                 win.fill((255, 255, 255))
                 pygame.draw.rect(win, (0, 0, 0), (0, 0, 780, 580))
-
-                if playerSnake.length > 0:
-                    for i in range(playerSnake.length - 1, 0, -1):
-                        segments[i].Coordinates.x = segments[i - 1].Coordinates.x
-                        segments[i].Coordinates.y = segments[i - 1].Coordinates.y
-                        segments[0].Coordinates.x = previoussnakelocation.x
-                        segments[0].Coordinates.y = previoussnakelocation.y
-
-                playerSnake.draw_segments(segments)
 
                 apple.drawApple()
                 playerSnake.draw()
@@ -157,9 +151,13 @@ def gameloop(playerSnake, segments):
                     apple_exists = True
 
                 if apple.Coordinates.x == playerSnake.Coordinates.x and apple.Coordinates.y == playerSnake.Coordinates.y:
-                    segments.append(Segment(Coordinate(playerSnake.Coordinates.x, playerSnake.Coordinates.y)))
+                    segments.append(Segment(Coordinate(-1, -1)))
                     playerSnake.length += 1
                     apple_exists = False
+
+                # Update snake segments after checking for collisions
+                playerSnake.update_segments()
+                playerSnake.draw_segments()
 
                 pygame.display.update()
                 clock.tick(15)
@@ -167,7 +165,6 @@ def gameloop(playerSnake, segments):
                 win.fill((0, 0, 0))
                 display_start_message()
                 pygame.display.update()
-
         # Apple
 
         # Apple
@@ -179,6 +176,6 @@ def gameloop(playerSnake, segments):
 
 starty = random.randint(2, 27) * 20
 startx = random.randint(2, 37) * 20
-Player = Snake(random_coordinate(), 0)
+Player = Snake(random_coordinate())
 Segments = []
 gameloop(Player, Segments)
