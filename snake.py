@@ -4,6 +4,7 @@ import pygame
 
 pygame.init()
 width, height = 800, 600
+score = 0
 win = pygame.display.set_mode((width, height))
 pygame.display.set_caption("Snake by JeroenRaaf")
 
@@ -68,7 +69,7 @@ font = pygame.font.Font(None, 38)
 sub_font = pygame.font.Font(None, 25)
 
 
-def display_text_message(main_text, color, sub_text=None):
+def display_text_message(main_text, color, sub_text=None, scnd_sub_text=None):
     main_text_surface = font.render(main_text, True, color)
     main_text_rect = main_text_surface.get_rect(center=(width // 2, height // 2))
     win.blit(main_text_surface, main_text_rect)
@@ -78,19 +79,27 @@ def display_text_message(main_text, color, sub_text=None):
         sub_text_rect = sub_text_surface.get_rect(center=(width // 2, height // 2 + 20))
         win.blit(sub_text_surface, sub_text_rect)
 
+    if scnd_sub_text:
+        scnd_sub_text_surface = sub_font.render(scnd_sub_text, True, color)
+        scnd_sub_text_rect = scnd_sub_text_surface.get_rect(center=(width // 2, height // 2 + 40))
+        win.blit(scnd_sub_text_surface, scnd_sub_text_rect)
+
     pygame.display.update()
 
 
 def display_start_message():
-    display_text_message("Press any key to start!", (255, 255, 255), "or press 'Q' to exit.")
+    display_text_message("Press any key to start!", (255, 255, 255), "or press 'Q' to exit.",
+                         "Use WASD or the arrow keys to move.")
 
 
 def display_gameover_message():
-    display_text_message("Game over! Press any key to continue.", (255, 0, 0), "or press 'Q' to exit.")
+    display_text_message("Game over! Press any key to continue.", (255, 0, 0),
+                         "", "or press 'Q' to exit.")
 
 
 def display_quit_message():
-    display_text_message("Are you sure? Press any key to continue.", (255, 0, 255), "or press 'Q' again to exit.")
+    display_text_message("Are you sure? Press any key to continue.", (255, 0, 255),
+                         "Your score currently is: " + str(Player.length - 1), "or press 'Q' again to exit.")
 
 
 def random_coordinate():
